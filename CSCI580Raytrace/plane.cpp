@@ -9,7 +9,30 @@
 Hit Plane::Intersection(const Ray& ray, int part) const
 {
     
-    TODO; //calculate ray+plane intersection
+    // TODO; //calculate ray+plane intersection
+    if (fabs(dot(ray.direction, normal)) < DBL_EPSILON) {
+        // Ray is parallel to the plane
+        if (dot((x1 - ray.endpoint), normal) < DBL_EPSILON) {
+            // Ray lies in the plane
+            Hit hit;
+            hit.object = this;
+            hit.dist = 0;
+            hit.part = part;
+            return hit;
+        }
+        // No intersection
+        return {nullptr, 0, part};
+    }
+
+    double t = dot((x1 - ray.endpoint), normal) / dot(ray.direction, normal);
+    Hit hit;
+    if (t >= 0) {
+        hit.object = this;
+        hit.dist = t;
+        hit.part = part;
+        return hit;
+    }
+
 
     return {nullptr, 0, part};
 }
