@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 4.0)
 project(ray_tracer)
 add_executable(ray_tracer main.cpp camera.cpp hierarchy.cpp flat_shader.cpp parse.cpp phong_shader.cpp plane.cpp reflective_shader.cpp render_world.cpp sphere.cpp box.cpp mesh.cpp)
 target_link_libraries(ray_tracer)
