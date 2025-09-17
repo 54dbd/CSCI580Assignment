@@ -9,4 +9,9 @@
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$/CSCI580Raytrace">
     <contentRoot DIR="$PROJECT_DIR$" />
   </component>
+  <component name="CidrRootsConfiguration">
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/CSCI580Raytrace/grading" />
+    </excludeRoots>
+  </component>
 </project>

@@ -8,11 +8,12 @@
 // to record a hit with t=0 as the first entry in hits.
 Hit Plane::Intersection(const Ray& ray, int part) const
 {
+    double EPS = 1e-6;
     
-    // TODO; //calculate ray+plane intersection
-    if (fabs(dot(ray.direction, normal)) < DBL_EPSILON) {
+    // DONE; //calculate ray+plane intersection
+    if (fabs(dot(ray.direction, normal)) < EPS) {
         // Ray is parallel to the plane
-        if (dot((x1 - ray.endpoint), normal) < DBL_EPSILON) {
+        if (dot((x1 - ray.endpoint), normal) < EPS) {
             // Ray lies in the plane
             Hit hit;
             hit.object = this;

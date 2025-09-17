@@ -4,7 +4,7 @@
 // Determine if the ray intersects with the sphere
 Hit Sphere::Intersection(const Ray& ray, int part) const
 {
-    TODO; //calculate ray sphere intersection
+    // DONE; //calculate ray sphere intersection
 
     Hit hit;
     vec3 oc = ray.endpoint - center;
@@ -35,7 +35,7 @@ vec3 Sphere::Normal(const vec3& point, int part) const
 {
     vec3 normal;
 
-    // TODO; //calculate Sphere surface normal at point
+    // DONE; //calculate Sphere surface normal at point
     normal = (point - center).normalized();
 
     return normal;
@@ -44,7 +44,7 @@ vec3 Sphere::Normal(const vec3& point, int part) const
 Box Sphere::Bounding_Box(int part) const
 {
     Box box;
-    // TODO; // calculate bounding box
+    // DONE; // calculate bounding box
     double r = radius;
     box.lo = center - vec3(r, r, r);
     box.hi = center + vec3(r, r, r);

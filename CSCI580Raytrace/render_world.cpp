@@ -29,7 +29,7 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
     closest_hit = {nullptr, 0, 0};
     double min_t = std::numeric_limits<double>::max();
 
-    // TODO; //find nearest intersection along ray
+    // DONE; //find nearest intersection along ray
     for (const auto& object : objects) {
         for (int part = 0; part < object->number_parts; ++part) {
             Hit hit = object->Intersection(ray, part);
@@ -47,7 +47,7 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
 void Render_World::Render_Pixel(const ivec2& pixel_index)
 {
     Ray ray;
-    // TODO; //set up ray start and direction
+    // DONE; //set up ray start and direction
     ray.endpoint = camera.position;
     ray.direction = (camera.World_Position(pixel_index) - camera.position).normalized();
     vec3 color=Cast_Ray(ray,1);
@@ -70,7 +70,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
     vec3 color;
     
-    // TODO; //fill color with casted ray result;
+    // DONE; //fill color with casted ray result;
     Hit hit = Closest_Intersection(ray);
     if (hit.object == nullptr) {
         if (background_shader != nullptr) {
