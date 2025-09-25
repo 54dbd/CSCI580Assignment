@@ -43,8 +43,37 @@ void Mesh::Read_Obj(const char* file)
 Hit Mesh::Intersection(const Ray& ray, int part) const
 {
     
-    TODO; //implement Mesh+ray Intersection
+    //DONE; //implement Mesh+ray Intersection
     Hit hit;
+    hit.object = nullptr;
+    hit.dist = 0;
+    hit.part = part;
+    double min_t = std::numeric_limits<double>::max();
+    if (part >= 0) {
+        // Check intersection with the specified triangle
+        double t;
+        if (Intersect_Triangle(ray, part, t)) {
+            if (t >= small_t && t < min_t) {
+                min_t = t;
+                hit.object = this;
+                hit.dist = t;
+                hit.part = part;
+            }
+        }
+    } else {
+        // Check intersection with all triangles
+        for (int i = 0; i < number_parts; ++i) {
+            double t;
+            if (Intersect_Triangle(ray, i, t)) {
+                if (t >= small_t && t < min_t) {
+                    min_t = t;
+                    hit.object = this;
+                    hit.dist = t;
+                    hit.part = i;
+                }
+            }
+        }
+    }
 
     return hit;
 }
@@ -58,7 +87,12 @@ vec3 Mesh::Normal(const vec3& point, int part) const
 
     vec3 tri_normal;
 
-    TODO; //implement tri normal calculation
+    // DONE; //implement tri normal calculation
+    vec3 A = vertices[current_triangle[0]];
+    vec3 B = vertices[current_triangle[1]];
+    vec3 C = vertices[current_triangle[2]];
+    tri_normal = cross(B - A, C - A).normalized();
+
 
     return tri_normal;
 }
@@ -79,9 +113,33 @@ bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 {
     ivec3 points = triangles[tri];
 
-    TODO; //implement tri+ray intersection
+    //DONE; //implement tri+ray intersection
+    vec3 A = vertices[points[0]];
+    vec3 B = vertices[points[1]];
+    vec3 C = vertices[points[2]];
 
-    return false;
+    vec3 n = cross(B - A, C - A);
+    double n_dot_d = dot(n, ray.direction);
+    if (fabs(n_dot_d) < 1e-8) {
+        return false; // Ray is parallel to the triangle plane
+    }
+
+    double t = dot(n, A - ray.endpoint) / n_dot_d;
+    if (t < small_t) {
+        return false;
+    }
+    vec3 P = ray.endpoint + t * ray.direction;
+    bool inside = true;
+    inside &= dot(cross(B - A, P - A), n) >= -weight_tolerance;
+    inside &= dot(cross(C - B, P - B), n) >= -weight_tolerance;
+    inside &= dot(cross(A - C, P - C), n) >= -weight_tolerance;
+    if (inside) {
+        dist = t;
+    }
+    return inside;
+
+
+
 }
 
 // Compute the bounding box.  Return the bounding box of only the triangle whose
@@ -89,6 +147,14 @@ bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 Box Mesh::Bounding_Box(int part) const
 {
     Box b;
-    TODO;
+    // DONE;
+    if (part < 0 || part >= number_parts) {
+        return box; // Return the overall bounding box if part is invalid
+    }
+    ivec3 tri = triangles[part];
+    b.Make_Empty();
+    b.Include_Point(vertices[tri[0]]);
+    b.Include_Point(vertices[tri[1]]);
+    b.Include_Point(vertices[tri[2]]);
     return b;
 }

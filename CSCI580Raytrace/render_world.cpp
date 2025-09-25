@@ -116,8 +116,26 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 
 void Render_World::Initialize_Hierarchy()
 {
-    TODO; // Fill in hierarchy.entries; there should be one entry for
+    // DONE; // Fill in hierarchy.entries; there should be one entry for
     // each part of each object.
+    hierarchy.entries.clear();
+    for (size_t i = 0; i < objects.size(); ++i)
+    {
+        Object* obj = objects[i];
+
+        // 若你的接口不是 Number_Parts() / Bounding_Box(part)
+        // 请替换为项目里的对应函数，如: obj->num_parts(), obj->Get_BBox(part) 等
+        const int nparts = obj->number_parts;
+
+        for (int p = 0; p < nparts; ++p)
+        {
+            Entry e;
+            e.obj = obj;                  // 该条目对应哪个对象
+            e.part = p;                      // 对象内的哪个 part（如三角形索引、平面索引等）
+            e.box = obj->Bounding_Box(p);    // 该 part 的 AABB（若 Entry 不含 box，可省略）
+            hierarchy.entries.push_back(e);
+        }
+    }
 
     hierarchy.Reorder_Entries();
     hierarchy.Build_Tree();
