@@ -20,6 +20,19 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
         vec3 light_dir_normed = (light->position - intersection_point).normalized();
         vec3 light_direction = light->position - intersection_point;
 
+        // shadow
+        if ( world.enable_shadows) {
+            Ray shadow_ray(intersection_point + normal * world.small_t, light_dir_normed);
+            Hit shadow_hit = world.Closest_Intersection(shadow_ray);
+            if (shadow_hit.object != nullptr) {
+                double light_distance = light_direction.magnitude();
+                if (shadow_hit.dist < light_distance) {
+                    // In shadow, skip this light
+                    continue;
+                }
+            }
+        }
+
         // Diffuse component
         double diff_intensity = std::max(0.0, dot(normal, light_dir_normed));
         diffuse += color_diffuse * diff_intensity * light->Emitted_Light(light_direction) ;
@@ -33,8 +46,6 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
     }
     vec3 color = diffuse + specular + ambient;
     color = componentwise_min(color,vec3(1, 1, 1) ); // Clamp to [0,1]
-
-
 
 
     return color;
