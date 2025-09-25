@@ -53,7 +53,8 @@ void Render_World::Render_Pixel(const ivec2& pixel_index)
     // DONE; //set up ray start and direction
     ray.endpoint = camera.position;
     ray.direction = (camera.World_Position(pixel_index) - camera.position).normalized();
-    vec3 color=Cast_Ray(ray,1);
+    vec3 color=Cast_Ray(ray,recursion_depth_limit);
+
     camera.Set_Pixel(pixel_index,Pixel_Color(color));
 }
 
@@ -102,6 +103,12 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         vec3 intersection_point = ray.Point(hit.dist);
         vec3 normal = hit.object->Normal(intersection_point, hit.part);
         color = hit.object->material_shader->Shade_Surface(ray, intersection_point, normal, recursion_depth);
+        for (int i=0; i<3;i++) {
+            if (color[i]>1) {
+                std::cout << "[Render_Pixel] color (" << color[i] << ", " << i << ")" << std::endl;
+            }
+        }
+
     }
 
     return color;

@@ -27,7 +27,8 @@ public:
     {
         TODO; // compute the emitted light for the spotlight.  Don't forget the
         // factor of 4*pi and the falloff (same as point light).
-        return vec3();
+
+        return color*brightness/(4*pi*vector_to_light.magnitude_squared());
     }
 };
 #endif

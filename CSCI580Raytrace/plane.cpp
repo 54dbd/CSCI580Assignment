@@ -8,7 +8,7 @@
 // to record a hit with t=0 as the first entry in hits.
 Hit Plane::Intersection(const Ray& ray, int part) const
 {
-    double EPS = 1e-6;
+    double EPS = 1e-4;
     
     // DONE; //calculate ray+plane intersection
     if (fabs(dot(ray.direction, normal)) < EPS) {
