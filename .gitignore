@@ -30,3 +30,7 @@
 *.out
 *.app
 /CSCI580Raytrace/grading/
+/CSCI580Raytrace/.idea/
+/CSCI580Raytrace/cmake-build-debug/
+*/grading/
+*/.idea/

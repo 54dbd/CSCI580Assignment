@@ -46,6 +46,9 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
 // set up the initial view ray and call
 void Render_World::Render_Pixel(const ivec2& pixel_index)
 {
+    if(debug_pixel) {
+        std::cout << "[Render_Pixel] Rendering pixel (" << pixel_index[0] << ", " << pixel_index[1] << ")" << std::endl;
+    }
     Ray ray;
     // DONE; //set up ray start and direction
     ray.endpoint = camera.position;
@@ -68,9 +71,23 @@ void Render_World::Render()
 // or the background color if there is no object intersection
 vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
 {
+    if(debug_pixel) {
+        std::cout << "[Cast_Ray] Recursion depth: " << recursion_depth << std::endl;
+        std::cout << "[Cast_Ray] Ray origin: (" << ray.endpoint[0] << ", " << ray.endpoint[1] << ", " << ray.endpoint[2] << ")" << std::endl;
+        std::cout << "[Cast_Ray] Ray direction: (" << ray.direction[0] << ", " << ray.direction[1] << ", " << ray.direction[2] << ")" << std::endl;
+    }
     vec3 color;
-    
+    // std::cout << "recursion_depth:"<<recursion_depth << std::endl;
     // DONE; //fill color with casted ray result;
+    if (recursion_depth <= 0) {
+        if (background_shader != nullptr) {
+            return background_shader->Shade_Surface(ray, vec3(0, 0, 0), vec3(0, 0, 0), 0);
+        } else {
+            return vec3(0, 0, 0);
+        }
+    }
+
+
     Hit hit = Closest_Intersection(ray);
     if (hit.object == nullptr) {
         if (background_shader != nullptr) {
@@ -81,6 +98,7 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         }
     }
     else {
+
         vec3 intersection_point = ray.Point(hit.dist);
         vec3 normal = hit.object->Normal(intersection_point, hit.part);
         color = hit.object->material_shader->Shade_Surface(ray, intersection_point, normal, recursion_depth);

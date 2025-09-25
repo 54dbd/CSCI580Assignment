@@ -45,7 +45,7 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
         specular += color_specular * spec_intensity * light->Emitted_Light(light_direction);
     }
     vec3 color = diffuse + specular + ambient;
-    color = componentwise_min(color,vec3(1, 1, 1) ); // Clamp to [0,1]
+    // color = componentwise_min(color,vec3(1, 1, 1) ); // Clamp to [0,1]
 
 
     return color;

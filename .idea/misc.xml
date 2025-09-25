@@ -11,6 +11,7 @@
   </component>
   <component name="CidrRootsConfiguration">
     <excludeRoots>
+      <file path="$PROJECT_DIR$/CSCI580Raytrace/.idea" />
       <file path="$PROJECT_DIR$/CSCI580Raytrace/grading" />
     </excludeRoots>
   </component>

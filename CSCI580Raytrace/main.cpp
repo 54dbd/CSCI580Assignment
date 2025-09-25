@@ -165,7 +165,7 @@ void Dump_ppm(Pixel* data,int width,int height,const char* filename)
  */
 
 // Indicates that we are debugging one pixel; can be accessed everywhere.
-bool debug_pixel=true;
+bool debug_pixel=false;
 
 // This can be used to quickly disable the hierarchy for testing purposes.
 // Though this is not required, it is highly recommended that you implement

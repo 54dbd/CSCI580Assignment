@@ -2,6 +2,7 @@ size 640 480
 color red 1 0 0
 color blue .2 .2 .8
 color white 1 1 1
+color black 0 0 0
 phong_shader red_shader red red white 50
 phong_shader blue_shader blue blue white 50
 phong_shader white_shader white white white 50
