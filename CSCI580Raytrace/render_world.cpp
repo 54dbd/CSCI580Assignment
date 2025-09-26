@@ -30,12 +30,28 @@ Hit Render_World::Closest_Intersection(const Ray& ray)
     double min_t = std::numeric_limits<double>::max();
 
     // DONE; //find nearest intersection along ray
-    for (const auto& object : objects) {
-        for (int part = 0; part < object->number_parts; ++part) {
-            Hit hit = object->Intersection(ray, part);
+    if (!disable_hierarchy && !hierarchy.entries.empty()) {
+        // Use BVH acceleration
+        std::vector<int> candidates;
+        hierarchy.Intersection_Candidates(ray, candidates);
+        
+        for (int idx : candidates) {
+            const Entry& entry = hierarchy.entries[idx];
+            Hit hit = entry.obj->Intersection(ray, entry.part);
             if (hit.object != nullptr && hit.dist >= small_t && hit.dist < min_t) {
                 min_t = hit.dist;
                 closest_hit = hit;
+            }
+        }
+    } else {
+        // Fallback to brute force
+        for (const auto& object : objects) {
+            for (int part = 0; part < object->number_parts; ++part) {
+                Hit hit = object->Intersection(ray, part);
+                if (hit.object != nullptr && hit.dist >= small_t && hit.dist < min_t) {
+                    min_t = hit.dist;
+                    closest_hit = hit;
+                }
             }
         }
     }
@@ -64,8 +80,10 @@ void Render_World::Render()
         Initialize_Hierarchy(); //ignore this untill the last 2 test cases
 
     for(int j=0;j<camera.number_pixels[1];j++)
-        for(int i=0;i<camera.number_pixels[0];i++)
+        for(int i=0;i<camera.number_pixels[0];i++) {
             Render_Pixel(ivec2(i,j));
+
+        }
 }
 
 // cast ray and return the color of the closest intersected surface point,
@@ -103,11 +121,14 @@ vec3 Render_World::Cast_Ray(const Ray& ray,int recursion_depth)
         vec3 intersection_point = ray.Point(hit.dist);
         vec3 normal = hit.object->Normal(intersection_point, hit.part);
         color = hit.object->material_shader->Shade_Surface(ray, intersection_point, normal, recursion_depth);
-        for (int i=0; i<3;i++) {
-            if (color[i]>1) {
-                std::cout << "[Render_Pixel] color (" << color[i] << ", " << i << ")" << std::endl;
+        if (debug_pixel) {
+            for (int i=0; i<3;i++) {
+                if (color[i]>1) {
+                    std::cout << "[Render_Pixel] color (" << color[i] << ", " << i << ")" << std::endl;
+                }
             }
         }
+
 
     }
 

@@ -4,7 +4,7 @@
 // Return whether the ray intersects this box.
 bool Box::Intersection(const Ray& ray) const
 {
-    TODO;
+    // DONE; // Ray-box intersection using slab method
     double tmin = (lo[0] - ray.endpoint[0]) / ray.direction[0];
     double tmax = (hi[0] - ray.endpoint[0]) / ray.direction[0];
     if (tmin > tmax) std::swap(tmin, tmax);

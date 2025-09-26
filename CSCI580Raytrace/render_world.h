@@ -23,7 +23,7 @@ public:
 
     bool enable_shadows;
     int recursion_depth_limit;
-    double small_t = 1e-6;
+    double small_t = 1e-4;
 
     Hierarchy hierarchy;
 

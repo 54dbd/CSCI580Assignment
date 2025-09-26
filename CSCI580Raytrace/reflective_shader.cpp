@@ -13,7 +13,7 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 
     vec3 color = (1 - reflectivity) * shader->Shade_Surface(ray, intersection_point, normal, recursion_depth);
 
-    TODO; //recursively cast ray untill recursion_depth is reached;
+    // DONE; //recursively cast ray untill recursion_depth is reached;
     vec3 reflection_dir = ray.direction - 2 * dot(ray.direction, normal) * normal  ;
     reflection_dir=reflection_dir.normalized();
     if (debug_pixel) {

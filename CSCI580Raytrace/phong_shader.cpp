@@ -13,6 +13,10 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
     vec3 diffuse;
     vec3 specular;
     vec3 ambient;
+    
+    // Ensure normal is properly normalized for smooth lighting
+    vec3 normalized_normal = normal.normalized();
+    
     // Ambient components
     ambient = color_ambient * world.ambient_color  * world.ambient_intensity;
 
@@ -22,7 +26,7 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 
         // shadow
         if ( world.enable_shadows) {
-            Ray shadow_ray(intersection_point + light_dir_normed * world.small_t, light_dir_normed);
+            Ray shadow_ray(intersection_point + light_dir_normed * small_t, light_dir_normed);
             Hit shadow_hit = world.Closest_Intersection(shadow_ray);
             if (shadow_hit.object != nullptr) {
                 double light_distance = light_direction.magnitude();
@@ -34,19 +38,17 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
         }
 
         // Diffuse component
-        double diff_intensity = std::max(0.0, dot(normal, light_dir_normed));
+        double diff_intensity = std::max(0.0, dot(normalized_normal, light_dir_normed));
         diffuse += color_diffuse * diff_intensity * light->Emitted_Light(light_direction) ;
 
 
         // Specular component
         vec3 view_dir = (ray.endpoint - intersection_point).normalized();
-        vec3 reflect_dir = (2 * dot(normal, light_dir_normed) * normal - light_dir_normed).normalized();
+        vec3 reflect_dir = (2 * dot(normalized_normal, light_dir_normed) * normalized_normal - light_dir_normed).normalized();
         double spec_intensity = pow(std::max(0.0, dot(view_dir, reflect_dir)), specular_power);
         specular += color_specular * spec_intensity * light->Emitted_Light(light_direction);
     }
     vec3 color = diffuse + specular + ambient;
-    // Clamp to [0,1] to avoid overflow in RGB
-    // color = componentwise_min(componentwise_max(color, vec3(0, 0, 0)), vec3(1, 1, 1));
 
 
     return color;
