@@ -144,16 +144,14 @@ void Render_World::Initialize_Hierarchy()
     {
         Object* obj = objects[i];
 
-        // 若你的接口不是 Number_Parts() / Bounding_Box(part)
-        // 请替换为项目里的对应函数，如: obj->num_parts(), obj->Get_BBox(part) 等
         const int nparts = obj->number_parts;
 
         for (int p = 0; p < nparts; ++p)
         {
             Entry e;
-            e.obj = obj;                  // 该条目对应哪个对象
-            e.part = p;                      // 对象内的哪个 part（如三角形索引、平面索引等）
-            e.box = obj->Bounding_Box(p);    // 该 part 的 AABB（若 Entry 不含 box，可省略）
+            e.obj = obj;
+            e.part = p;
+            e.box = obj->Bounding_Box(p);
             hierarchy.entries.push_back(e);
         }
     }
