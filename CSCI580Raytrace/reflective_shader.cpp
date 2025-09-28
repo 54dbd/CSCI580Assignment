@@ -1,7 +1,5 @@
 #include "reflective_shader.h"
 
-#include <__random/clamp_to_integral.h>
-
 #include "ray.h"
 #include "render_world.h"
 
