@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 4.0)
 project(driver)
 add_executable(driver main.cpp parse.cpp driver_state.cpp shaders.cpp)
-target_link_libraries(driver png)
+
+find_package(PNG REQUIRED)
+target_link_libraries(driver PRIVATE PNG::PNG)
+
+#target_link_libraries(driver png)
 if(CMAKE_COMPILER_IS_GNUCXX)
     add_definitions(-std=c++11)
 endif()
