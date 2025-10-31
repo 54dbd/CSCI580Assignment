@@ -286,55 +286,68 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
     float y2 = (v2.gl_Position[1] / v2.gl_Position[3] + 1.0f) * 0.5f * state.image_height;
     float z2 = v2.gl_Position[2] / v2.gl_Position[3];
     
-    // Calculate bounding box
-    int min_x = std::max(0, (int)std::min({x0, x1, x2}));
-    int max_x = std::min(state.image_width - 1, (int)std::max({x0, x1, x2}));
-    int min_y = std::max(0, (int)std::min({y0, y1, y2}));
-    int max_y = std::min(state.image_height - 1, (int)std::max({y0, y1, y2}));
+    // Calculate bounding box with proper rounding to include edge pixels
+    int min_x = std::max(0, (int)std::floor(std::min({x0, x1, x2})));
+    int max_x = std::min(state.image_width - 1, (int)std::ceil(std::max({x0, x1, x2})));
+    int min_y = std::max(0, (int)std::floor(std::min({y0, y1, y2})));
+    int max_y = std::min(state.image_height - 1, (int)std::ceil(std::max({y0, y1, y2})));
     
     // Iterate over pixels in bounding box
-    for (int y = min_y; y <= max_y; y++) {
-        for (int x = min_x; x <= max_x; x++) {
+    for (int y = min_y; y < max_y; y++) {
+        for (int x = min_x; x < max_x; x++) {
             // Calculate barycentric coordinates for inside/outside test
             float alpha = ((y1 - y2) * (x - x2) + (x2 - x1) * (y - y2)) / 
                          ((y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2));
             float beta = ((y2 - y0) * (x - x2) + (x0 - x2) * (y - y2)) / 
                         ((y1 - y2) * (x0 - x2) + (x2 - x1) * (y0 - y2));
-            float gamma = 1.00f - alpha - beta;
-            float epsilon = 1e-6f;
-            float safe_z0 = (std::abs(z0) < epsilon) ? epsilon : z0;
-            float safe_z1 = (std::abs(z1) < epsilon) ? epsilon : z1;
-            float safe_z2 = (std::abs(z2) < epsilon) ? epsilon : z2;
-
-            // Check if point is inside triangle
-            if (alpha >= 0 && beta >= 0 && gamma >= 0) {
+            float gamma = 1.0f - alpha - beta;
+            
+            // Check if point is inside triangle (use small epsilon for edge cases)
+            const float epsilon = 1e-6f;
+            if (alpha >= -epsilon && beta >= -epsilon && gamma >= -epsilon) {
                 // Calculate depth using barycentric coordinates
-                float G = alpha/safe_z0 + beta/safe_z1 + gamma/safe_z2;
-                float Alpha = alpha/(safe_z0*G);
-                float Beta = beta/(safe_z1*G);
-                float Gamma = gamma/(safe_z2*G);
-                float depth = Alpha * safe_z0 + Beta * safe_z1 + Gamma * safe_z2;
+                float depth = alpha * z0 + beta * z1 + gamma * z2;
+                
                 // Depth test
                 int pixel_index = y * state.image_width + x;
                 if (depth < state.image_depth[pixel_index]) {
                     // Update depth buffer
                     state.image_depth[pixel_index] = depth;
 
+                    // Interpolate vertex data
                     auto* data = new float[state.floats_per_vertex];
                     data_fragment frag_data{ data };
                     data_output output_data;
+                    
                     for (int k = 0; k < state.floats_per_vertex; k++) {
                         switch (state.interp_rules[k]) {
-                            case interp_type::flat:
-                                //use the vertex data directly (all 3 usually have the same value so just 1 works)
-                                break;
-                            case interp_type::smooth:
-                                //use depth-adjusted barys to interpolate all 3 vertex values
-                            case interp_type::noperspective:
-                                //use xy barys to interpolate all 3 vertex values
-                                break;
-                            default:
-                                break;
+                        case interp_type::flat:
+                            // Use vertex data from first vertex
+                            data[k] = v0.data[k];
+                            break;
+                        case interp_type::smooth:
+                            // Use depth-adjusted barycentric coordinates for perspective-correct interpolation
+                            {
+                                float w0 = 1.0f / v0.gl_Position[3];
+                                float w1 = 1.0f / v1.gl_Position[3];
+                                float w2 = 1.0f / v2.gl_Position[3];
+                                
+                                float w = alpha * w0 + beta * w1 + gamma * w2;
+                                float alpha_corrected = (alpha * w0) / w;
+                                float beta_corrected = (beta * w1) / w;
+                                float gamma_corrected = (gamma * w2) / w;
+                                
+                                data[k] = alpha_corrected * v0.data[k] + 
+                                         beta_corrected * v1.data[k] + 
+                                         gamma_corrected * v2.data[k];
+                            }
+                            break;
+                        case interp_type::noperspective:
+                            // Use regular barycentric coordinates for linear interpolation
+                            data[k] = alpha * v0.data[k] + beta * v1.data[k] + gamma * v2.data[k];
+                            break;
+                        default:
+                            break;
                         }
                     }
 
