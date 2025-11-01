@@ -35,3 +35,4 @@
 /CSCI580Raytrace/cmake-build-debug/
 */grading/
 */.idea/
+.DS_Store

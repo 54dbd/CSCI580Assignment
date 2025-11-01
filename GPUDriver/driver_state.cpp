@@ -263,19 +263,6 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
         }
     };
     
-    // Helper function to get clip plane value
-    auto get_clip_value = [&](float val, float w) -> float {
-        switch(face) {
-            case 0: return -w; // x = -w
-            case 1: return w;  // x = w
-            case 2: return -w; // y = -w
-            case 3: return w;  // y = w
-            case 4: return -w; // z = -w (near)
-            case 5: return w;  // z = w (far)
-            default: return 0;
-        }
-    };
-    
     // Helper function to get component index for clipping
     int comp = (face < 2) ? 0 : ((face < 4) ? 1 : 2);
     
@@ -298,45 +285,26 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
     }
     
     // Helper function to interpolate vertex data
-    auto interpolate_vertex = [&](const data_geometry& v_in, const data_geometry& v_out, float t) {
+    auto interpolate_vertex = [&](const data_geometry& v_in,
+                                  const data_geometry& v_out, float t) {
         data_geometry v;
         v.data = new float[state.floats_per_vertex];
-        
-        // Interpolate position
-        for(int i = 0; i < 4; i++) {
+
+        for (int i = 0; i < 4; i++) {
             v.gl_Position[i] = v_in.gl_Position[i] + t * (v_out.gl_Position[i] - v_in.gl_Position[i]);
         }
-        
-        // Interpolate vertex data based on interpolation rules
-        // For clipping, we need to interpolate correctly based on the interpolation type
-        float w_in = v_in.gl_Position[3];
+
+        float w_in  = v_in.gl_Position[3];
         float w_out = v_out.gl_Position[3];
         float w_result = v.gl_Position[3];
-        
-        for(int k = 0; k < state.floats_per_vertex; k++) {
-            switch(state.interp_rules[k]) {
+
+        for (int k = 0; k < state.floats_per_vertex; k++) {
+            switch (state.interp_rules[k]) {
                 case interp_type::flat:
-                    v.data[k] = v0.data[k];
+                    v.data[k] = v_in.data[k];
                     break;
                 case interp_type::smooth:
-                    // Perspective-correct interpolation in homogeneous space
-                    // Standard formula: data = ((1-t)*data_in/w_in + t*data_out/w_out) * w_result
-                    // where w_result is already computed from position interpolation
-                    {
-                        float inv_w_in = 1.0f / w_in;
-                        float inv_w_out = 1.0f / w_out;
-                        
-                        // Interpolate data/w using 1/w weighted interpolation
-                        // This is equivalent to: (1-t)*data_in/w_in + t*data_out/w_out
-                        float data_div_w = (1.0f - t) * (v_in.data[k] * inv_w_in) + t * (v_out.data[k] * inv_w_out);
-                        
-                        // Interpolate 1/w to verify consistency (should match w_result)
-                        float inv_w_result = (1.0f - t) * inv_w_in + t * inv_w_out;
-                        
-                        // Multiply by w_result to get the final data value
-                        // Use computed w_result for consistency with position interpolation
-                        v.data[k] = data_div_w / inv_w_result;
-                    }
+                    v.data[k] = v_in.data[k] + t * (v_out.data[k] - v_in.data[k]);
                     break;
                 case interp_type::noperspective:
                     // No-perspective interpolation: linear in screen space (not perspective-corrected)
@@ -376,10 +344,10 @@ void clip_triangle(driver_state& state, const data_geometry& v0,
                     break;
             }
         }
-        
+
         return v;
     };
-    
+
     // Helper function to create intersection point
     auto intersect = [&](const data_geometry& v_in, const data_geometry& v_out) -> data_geometry {
         // Calculate t where the edge intersects the clipping plane
@@ -528,11 +496,28 @@ void rasterize_triangle(driver_state& state, const data_geometry& v0,
             }
             
             // Calculate barycentric coordinates using pixel center
-            float beta = ((py - y0) * (x2 - x0) - (px - x0) * (y2 - y0)) / denom;
-            float gamma = ((y1 - y0) * (px - x0) - (x1 - x0) * (py - y0)) / denom;
-            float alpha = 1.0f - beta - gamma;
+            // Standard formula: 
+            // alpha = area(p, v1, v2) / area(v0, v1, v2) = area_p_v1_v2 / denom
+            // beta = area(v0, p, v2) / area(v0, v1, v2) = area_v0_p_v2 / denom  
+            // gamma = area(v0, v1, p) / area(v0, v1, v2) = area_v0_v1_p / denom
+            // where denom = area(v0, v1, v2)
+            float area_p_v1_v2 = (y1 - py) * (x2 - px) - (x1 - px) * (y2 - py);
+            float area_v0_p_v2 = (py - y0) * (x2 - x0) - (px - x0) * (y2 - y0);
+            float area_v0_v1_p = (y1 - y0) * (px - x0) - (x1 - x0) * (py - y0);
+            
+            // Calculate barycentric coordinates
+            // Note: All areas have the same sign as denom, so division preserves correct signs
+            float alpha = area_p_v1_v2 / denom;
+            float beta = area_v0_p_v2 / denom;
+            float gamma = area_v0_v1_p / denom;
+            
+            // Verify they sum to 1 (should always be true for barycentric coords)
+            // alpha + beta + gamma should equal 1, but due to floating point errors, we recalculate
+            // Actually, let's keep the direct calculation and just verify
             
             // Check if point is inside triangle (use small epsilon for edge cases)
+            // For points inside triangle, all barycentric coordinates should be >= 0
+            // We use epsilon to handle edge cases and numerical errors
             const float epsilon = 1e-6f;
             if (alpha >= -epsilon && beta >= -epsilon && gamma >= -epsilon) {
                 // Calculate depth using barycentric coordinates
